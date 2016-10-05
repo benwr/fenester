@@ -76,13 +76,8 @@ class Layout(object):
         horizontalsplitlist.sort()
         verticalsplitlist.sort()
 
-        # print(self.direction_string())
-        # print(partialhsplits)
-        # print(horizontalsplitlist)
-        # print(partialvsplits)
-        # print(verticalsplitlist)
-
-        groups = [list() for _ in (horizontalsplitlist if self.direction == VERTICAL else verticalsplitlist)]
+        groups = [list() for _ in (horizontalsplitlist
+            if self.direction == VERTICAL else verticalsplitlist)]
 
         # figure out where the splits are and add windows to the right layouts
         # This is even less efficient than the above stuff, but it's probably not
@@ -113,7 +108,6 @@ class Layout(object):
                         if w == focused:
                             self.focused_index = i - 1
                         break
-        # print(groups)
 
         self.layouts = [Layout(ws, focused) for ws in groups]
 
@@ -127,19 +121,24 @@ class Layout(object):
 
 
     def __repr__(self):
-        min_dim = self.min_height() if self.direction == HORIZONTAL else self.min_width()
-        preferred_dim = self.preferred_height() if self.direction == HORIZONTAL else self.preferred_width()
-        focused_dim = self.focused_height() if self.direction == HORIZONTAL else self.focused_width()
+        min_dim = (self.min_height()
+                if self.direction == HORIZONTAL else self.min_width())
+        preferred_dim = (self.preferred_height()
+                if self.direction == HORIZONTAL else self.preferred_width())
+        focused_dim = (self.focused_height()
+                if self.direction == HORIZONTAL else self.focused_width())
         if self.layouts:
             return "Layout({} ({}, {}, {}) : {})".format(
-                    self.direction_string(), min_dim, preferred_dim, focused_dim, self.layouts)
+                    self.direction_string(), min_dim,
+                    preferred_dim, focused_dim, self.layouts)
         else:
             return "Layout((({}, {}), ({}, {})) : {})".format(
-                    self.min_width(), self.min_height(), self.preferred_width(), self.preferred_height(), self.window)
+                    self.min_width(), self.min_height(), self.preferred_width(),
+                    self.preferred_height(), self.window)
 
     def min_width(self):
         if self.direction == NONE:
-            return 30
+            return 20
         elif self.direction == VERTICAL:
             return max([l.min_width() for l in self.layouts])
         else: # self.direction == HORIZONTAL:
@@ -155,7 +154,8 @@ class Layout(object):
         
     def preferred_width(self):
         if self.direction == NONE:
-            return max([len(l) for l in self.window.buffer])
+            return max([len(l) for l in self.window.buffer]) + 6
+        # for line numbers
         elif self.direction == VERTICAL:
             return max([l.preferred_width() for l in self.layouts])
         else: # self.direction == HORIZONTAL:
@@ -193,7 +193,8 @@ class Layout(object):
         if self.direction == VERTICAL:
             return max([self.layouts[self.focused_index].focused_height()]
                     + [l.min_height() for l in
-                        self.layouts[:self.focused_index] + self.layouts[self.focused_index + 1:]])
+                        self.layouts[:self.focused_index] +
+                        self.layouts[self.focused_index + 1:]])
         else: # self.direction == HORIZONTAL
             return sum([self.layouts[self.focused_index].focused_height()]
                     + [l.min_height() for l in
@@ -210,13 +211,17 @@ class Layout(object):
             if self.focused_index != -1:
                 focused_min_width = min_widths[self.focused_index]
                 focused_width = self.layouts[self.focused_index].focused_width()
-                min_widths[self.focused_index] = min(width - min_width, focused_width)
+                min_widths[self.focused_index] = min(width - min_width,
+                        focused_width)
 
-            growth_rates = [p - m for (p, m) in zip(preferred_widths, min_widths)]
+            growth_rates = [p - m for (p, m) in
+                    zip(preferred_widths, min_widths)]
             total_growth = width - sum(min_widths) 
-            growth_proportions = [r / sum(growth_rates) for r in growth_rates]
+            growth_proportions = [float(r) / sum(growth_rates)
+                    for r in growth_rates]
 
-            widths = [r * total_growth + m for (r, m) in zip(growth_proportions, min_widths)]
+            widths = [r * total_growth + m
+                    for (r, m) in zip(growth_proportions, min_widths)]
             for w, l in zip(widths, self.layouts):
                 l.force_into_dimensions(int(w), height)
         elif self.direction == VERTICAL:
@@ -227,14 +232,19 @@ class Layout(object):
                 raise ValueError("Not enough room to resize")
             if self.focused_index != -1:
                 focused_min_height = min_heights[self.focused_index]
-                focused_height = self.layouts[self.focused_index].focused_height()
-                min_heights[self.focused_index] = min(height - min_height, focused_height)
+                focused_height = (self.layouts[self.focused_index]
+                        .focused_height())
+                min_heights[self.focused_index] = min(height - min_height,
+                        focused_height)
 
-            growth_rates = [p - m for (p, m) in zip(preferred_heights, min_heights)]
+            growth_rates = [p - m for (p, m)
+                    in zip(preferred_heights, min_heights)]
             total_growth = height - sum(min_heights) 
-            growth_proportions = [r / sum(growth_rates) for r in growth_rates]
+            growth_proportions = [float(r) / sum(growth_rates)
+                    for r in growth_rates]
 
-            heights = [r * total_growth + m for (r, m) in zip(growth_proportions, min_heights)]
+            heights = [r * total_growth + m for (r, m)
+                    in zip(growth_proportions, min_heights)]
             for w, l in zip(heights, self.layouts):
                 l.force_into_dimensions(width, int(w))
         else:
@@ -246,6 +256,5 @@ class Layout(object):
 
 layout = Layout(vim.windows, vim.current.window)
 
-print(layout)
 
 layout.force_layout()
