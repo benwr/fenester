@@ -11,13 +11,15 @@ class Layout(object):
     If a collection of layouts, all immediate childen must be arranged
     along the same axis (horizontally or vertically).
     """
-    def __init__(self, windows):
+    def __init__(self, windows, focused):
         """Build the layout tree based on window positions.
 
         This method probably has annoying failure modes, but vim doesn't
         seem to expose its internal split tree to the plugin, so we're kinda
         restricted to doing it this way.
         """
+
+        self.focused_index = -1
 
         # I think this function ends up being unnecessarily expensive (n^2 * log n?)
         # but it was the first thing I thought of, and n^2 * log n is still smallish for
@@ -68,37 +70,52 @@ class Layout(object):
                 if w.row != self.top:
                     # Found one!
                     self.direction = VERTICAL
-            if w.col != self.top and partialvsplits[w.col] >= self.height:
+            if partialvsplits[w.col] >= self.height:
                 verticalsplitlist.append(w.col)
 
         horizontalsplitlist.sort()
         verticalsplitlist.sort()
-        
+
+        # print(self.direction_string())
+        # print(partialhsplits)
+        # print(horizontalsplitlist)
+        # print(partialvsplits)
+        # print(verticalsplitlist)
 
         groups = [list() for _ in (horizontalsplitlist if self.direction == VERTICAL else verticalsplitlist)]
 
         # figure out where the splits are and add windows to the right layouts
         # This is even less efficient than the above stuff, but it's probably not
-        # important. It could probably be improved using `bisect`.
+        # important. It could probably be improved using `bisect`, or by just writing
+        # my own damn binary search.
         for w in windows:
             if self.direction == HORIZONTAL:
                 for i, col in enumerate(verticalsplitlist):
                     if col == w.col or i == len(verticalsplitlist) - 1:
                         groups[i].append(w)
+                        if w == focused:
+                            self.focused_index = i
                         break
                     if col > w.col:
                         groups[i - 1].append(w)
+                        if w == focused:
+                            self.focused_index = i - 1
                         break
             else:
-                for i, row in enumera)te(horizontalsplitlist):
+                for i, row in enumerate(horizontalsplitlist):
                     if row == w.row or i == len(horizontalsplitlist) - 1:
                         groups[i].append(w)
+                        if w == focused:
+                            self.focused_index = i
                         break
                     if row > w.row:
                         groups[i - 1].append(w)
+                        if w == focused:
+                            self.focused_index = i - 1
                         break
+        # print(groups)
 
-        self.layouts = [Layout(ws) for ws in groups]
+        self.layouts = [Layout(ws, focused) for ws in groups]
 
     def direction_string(self):
         if self.direction == HORIZONTAL:
@@ -115,3 +132,99 @@ class Layout(object):
         else:
             return "Layout({})".format(self.window)
 
+    def min_width(self):
+        if self.direction == NONE:
+            return 30
+        elif self.direction == VERTICAL:
+            return max([l.min_width() for l in self.layouts])
+        else: # self.direction == HORIZONTAL:
+            return sum([l.min_width() for l in self.layouts])
+
+    def min_height(self):
+        if self.direction == NONE:
+            return 10
+        elif self.direction == VERTICAL:
+            return sum([l.min_height() for l in self.layouts])
+        else: # self.direction == HORIZONTAL:
+            return max([l.min_height() for l in self.layouts])
+        
+    def preferred_width(self):
+        if self.direction == NONE:
+            return max([len(l) for l in self.window.buffer])
+        elif self.direction == VERTICAL:
+            return max([l.preferred_width() for l in self.layouts])
+        else: # self.direction == HORIZONTAL:
+            return sum([l.preferred_width() for l in self.layouts])
+
+    def preferred_height(self):
+        if self.direction == NONE:
+            return len(self.window.buffer)
+        elif self.direction == VERTICAL:
+            return max([l.preferred_height() for l in self.layouts])
+        else: # self.direction == HORIZONTAL:
+            return sum([l.preferred_height() for l in self.layouts])
+
+    def focused_width(self):
+        if self.direction == NONE:
+            return self.preferred_width()
+        if self.focused_index == -1:
+            return self.min_width()
+        if self.direction == VERTICAL:
+            return max([self.layouts[self.focused_index].focused_width()] + [l.min_width() for l in self.layouts])
+        else: # self.direction == HORIZONTAL
+            return sum([self.layouts[self.focused_index].focused_width()] + [l.min_width() for l in self.layouts])
+
+    def focused_height(self):
+        if self.direction == NONE:
+            return self.preferred_height()
+        if self.focused_index == -1:
+            return self.min_height()
+        if self.direction == VERTICAL:
+            return max([self.layouts[self.focused_index].focused_height()] + [l.min_height() for l in self.layouts])
+        else: # self.direction == HORIZONTAL
+            return sum([self.layouts[self.focused_index].focused_height()] + [l.min_height() for l in self.layouts])
+    
+    def force_into_dimensions(self, width, height):
+        if self.direction == HORIZONTAL:
+            min_widths = [l.min_width() for l in self.layouts]
+            preferred_widths = [l.preferred_width() for l in self.layouts]
+            min_width = sum(min_widths)
+            if min_width > width:
+                raise ValueError("Not enough room to resize")
+            if self.focused_index != -1:
+                focused_min_width = min_widths[self.focused_index]
+                focused_width = self.layouts[self.focused_index].focused_height()
+                min_widths[self.focused_index] = min(width - min_width - focused_min_width , focused_width)
+
+            growth_rates = [p - m for (p, m) in zip(preferred_widths, min_widths)]
+            growth_param = int((width - sum(min_widths)) / sum(growth_rates))
+            widths = [g * growth_param + m for (g, m) in zip(growth_rates, min_widths)]
+            for w, l in zip(widths, self.layouts):
+                l.force_into_dimensions(w, height)
+
+        elif self.direction == VERTICAL:
+            min_heights = [l.min_height() for l in self.layouts]
+            preferred_heights = [l.preferred_height() for l in self.layouts]
+            min_height = sum(min_heights)
+            if min_height > height:
+                raise ValueError("Not enough room to resize")
+            if self.focused_index != -1:
+                focused_min_height = min_heights[self.focused_index]
+                focused_height = self.layouts[self.focused_index].focused_height()
+                min_heights[self.focused_index] = min(height - min_height - focused_min_height, focused_height)
+
+            growth_rates = [p - m for (p, m) in zip(preferred_heights, min_heights)]
+            growth_param = int((height - sum(min_heights)) / sum(growth_rates))
+            heights = [g * growth_param + m for (g, m) in zip(growth_rates, min_heights)]
+
+            for h, l in zip(heights, self.layouts):
+                l.force_into_dimensions(width, h)
+        else:
+            self.window.width = width
+            self.window.height = height
+
+    def force_layout(self):
+        self.force_into_dimensions(self.width, self.height)
+
+
+Layout(vim.windows, vim.current.window).force_layout()
