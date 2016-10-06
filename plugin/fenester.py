@@ -159,7 +159,7 @@ class Layout(object):
             text_length = len(self.window.buffer)
             lineno_width = min(int(math.log(text_length, 10) + 1.0001), 4)
             return max(max([len(l) for l in self.window.buffer]) + lineno_width
-                    + 1, self.min_width() + lineno_width + 1)
+                    + 2, self.min_width() + lineno_width + 2)
         # for line numbers
         elif self.direction == VERTICAL:
             return max([l.preferred_width() for l in self.layouts])
@@ -168,7 +168,7 @@ class Layout(object):
 
     def preferred_height(self):
         if self.direction == NONE:
-            return max(len(self.window.buffer) + 2, self.min_height() + 2)
+            return max(len(self.window.buffer) + 5, self.min_height() + 5)
         elif self.direction == VERTICAL:
             return sum([l.preferred_height() for l in self.layouts])
         else: # self.direction == HORIZONTAL:
