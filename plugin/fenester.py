@@ -8,6 +8,7 @@ VERTICAL = 1
 HORIZONTAL = 2
 
 DEFAULT_MIN_WIDTH = 20
+DEFAULT_MIN_HEIGHT = 10
 
 class Layout(object):
     """Either a window or a collection of layouts (in a tree).
@@ -28,6 +29,9 @@ class Layout(object):
         self.minwidth = None
         self.prefwidth = None
         self.focwidth = None
+        self.minheight = None
+        self.prefheight = None
+        self.focheight = None
 
         # I think this function ends up being unnecessarily expensive (n^2 * log n?)
         # but it was the first thing I thought of, and n^2 * log n is still smallish for
@@ -156,12 +160,16 @@ class Layout(object):
         return self.minwidth
 
     def min_height(self):
-        if self.direction == NONE:
-            return 10
+        if self.minheight:
+            return self.minheight
+        elif self.direction == NONE:
+            self.minheight = DEFAULT_MIN_HEIGHT
         elif self.direction == VERTICAL:
-            return sum([l.min_height() for l in self.layouts])
+            self.minheight = sum([l.min_height() for l in self.layouts])
         else: # self.direction == HORIZONTAL:
-            return max([l.min_height() for l in self.layouts])
+            self.minheight = max([l.min_height() for l in self.layouts])
+
+        return self.minheight
         
     def preferred_width(self):
         if self.prefwidth:
@@ -182,12 +190,16 @@ class Layout(object):
         return self.prefwidth
 
     def preferred_height(self):
-        if self.direction == NONE:
-            return max(len(self.window.buffer) + 5, self.min_height() + 5)
+        if self.prefheight:
+            return self.prefheight
+        elif self.direction == NONE:
+            self.prefheight = max(len(self.window.buffer) + 5, self.min_height() + 5)
         elif self.direction == VERTICAL:
-            return sum([l.preferred_height() for l in self.layouts])
+            self.prefheight = sum([l.preferred_height() for l in self.layouts])
         else: # self.direction == HORIZONTAL:
-            return max([l.preferred_height() for l in self.layouts])
+            self.prefheight = max([l.preferred_height() for l in self.layouts])
+
+        return self.prefheight
 
     def focused_width(self):
         if self.focwidth:
@@ -210,20 +222,24 @@ class Layout(object):
         return self.focwidth
 
     def focused_height(self):
-        if self.direction == NONE:
-            return self.preferred_height()
-        if self.focused_index == -1:
-            return self.min_height()
-        if self.direction == VERTICAL:
-            return sum([self.layouts[self.focused_index].focused_height()]
+        if self.focheight:
+            return self.focheight
+        elif self.direction == NONE:
+            self.focheight = self.preferred_height()
+        elif self.focused_index == -1:
+            self.focheight = self.min_height()
+        elif self.direction == VERTICAL:
+            self.focheight = sum([self.layouts[self.focused_index].focused_height()]
                     + [l.min_height() for l in
                         self.layouts[:self.focused_index] +
                         self.layouts[self.focused_index + 1:]])
         else: # self.direction == HORIZONTAL
-            return max([self.layouts[self.focused_index].focused_height()]
+            self.focheight = max([self.layouts[self.focused_index].focused_height()]
                     + [l.min_height() for l in
                         self.layouts[:self.focused_index] +
                         self.layouts[self.focused_index + 1:]])
+
+        return self.focheight
     
     def force_into_dimensions(self, width, height):
         if self.direction == HORIZONTAL:
