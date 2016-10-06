@@ -213,17 +213,21 @@ class Layout(object):
                 focused_width = self.layouts[self.focused_index].focused_width()
                 min_widths[self.focused_index] = min(width - min_width,
                         focused_width)
+            if sum(preferred_widths) <= width:
+                for i, (w, l) in enumerate(zip(preferred_widths, self.layouts)):
+                    if i != self.focused_index:
+                        l.force_into_dimensions(w, height)
+            else:
+                growth_rates = [p - m for (p, m) in
+                        zip(preferred_widths, min_widths)]
+                total_growth = width - sum(min_widths) 
+                growth_proportions = [float(r) / sum(growth_rates)
+                        for r in growth_rates]
 
-            growth_rates = [p - m for (p, m) in
-                    zip(preferred_widths, min_widths)]
-            total_growth = width - sum(min_widths) 
-            growth_proportions = [float(r) / sum(growth_rates)
-                    for r in growth_rates]
-
-            widths = [r * total_growth + m
-                    for (r, m) in zip(growth_proportions, min_widths)]
-            for w, l in zip(widths, self.layouts):
-                l.force_into_dimensions(int(w), height)
+                widths = [r * total_growth + m
+                        for (r, m) in zip(growth_proportions, min_widths)]
+                for w, l in zip(widths, self.layouts):
+                    l.force_into_dimensions(int(w), height)
         elif self.direction == VERTICAL:
             min_heights = [l.min_height() for l in self.layouts]
             preferred_heights = [l.preferred_height() for l in self.layouts]
@@ -237,19 +241,24 @@ class Layout(object):
                 min_heights[self.focused_index] = min(height - min_height,
                         focused_height)
 
-            growth_rates = [p - m for (p, m)
-                    in zip(preferred_heights, min_heights)]
-            total_growth = height - sum(min_heights) 
-            if sum(growth_rates) > 0:
-                growth_proportions = [float(r) / sum(growth_rates)
-                        for r in growth_rates]
+            if sum(preferred_heights) <= height:
+                for i, (h, l) in enumerate(zip(preferred_heights, self.layouts)):
+                    if i != self.focused_index:
+                        l.force_into_dimensions(width, h)
             else:
-                growth_proportions = [1 for _ in growth_rates]
+                growth_rates = [p - m for (p, m)
+                        in zip(preferred_heights, min_heights)]
+                total_growth = height - sum(min_heights) 
+                if sum(growth_rates) > 0:
+                    growth_proportions = [float(r) / sum(growth_rates)
+                            for r in growth_rates]
+                else:
+                    growth_proportions = [1 for _ in growth_rates]
 
-            heights = [r * total_growth + m for (r, m)
-                    in zip(growth_proportions, min_heights)]
-            for w, l in zip(heights, self.layouts):
-                l.force_into_dimensions(width, int(w))
+                heights = [r * total_growth + m for (r, m)
+                        in zip(growth_proportions, min_heights)]
+                for w, l in zip(heights, self.layouts):
+                    l.force_into_dimensions(width, int(w))
         else:
             self.window.width = width
             self.window.height = height
