@@ -213,14 +213,14 @@ class Layout(object):
                 focused_width = self.layouts[self.focused_index].focused_width()
                 min_widths[self.focused_index] = min(width - min_width,
                         focused_width)
-                if sum(preferred_widths) <= width:
-                    for i, (w, l) in enumerate(zip(preferred_widths, self.layouts)):
-                        if i != self.focused_index:
-                            l.force_into_dimensions(w, height)
-                        else:
-                            l.force_into_dimensions(width -
-                                    sum(preferred_widths) +
-                                    preferred_widths[self.focused_index], height)
+            if sum(preferred_widths) <= width:
+                for i, (w, l) in enumerate(zip(preferred_widths, self.layouts)):
+                    if i != self.focused_index:
+                        l.force_into_dimensions(w, height)
+                    elif self.focused_index != -1:
+                        l.force_into_dimensions(width -
+                                sum(preferred_widths) +
+                                preferred_widths[self.focused_index], height)
             else:
                 growth_rates = [p - m for (p, m) in
                         zip(preferred_widths, min_widths)]
@@ -245,12 +245,12 @@ class Layout(object):
                 min_heights[self.focused_index] = min(height - min_height,
                         focused_height)
 
-                if sum(preferred_heights) <= height:
-                    for i, (h, l) in enumerate(zip(preferred_heights, self.layouts)):
-                        if i != self.focused_index:
-                            l.force_into_dimensions(width, h)
-                        else:
-                            l.force_into_dimensions(width, height - sum(preferred_heights) +
+            if sum(preferred_heights) <= height:
+                for i, (h, l) in enumerate(zip(preferred_heights, self.layouts)):
+                    if i != self.focused_index:
+                        l.force_into_dimensions(width, h)
+                    elif self.focused_index != -1:
+                        l.force_into_dimensions(width, height - sum(preferred_heights) +
                                     preferred_heights[self.focused_index])
             else:
                 growth_rates = [p - m for (p, m)
