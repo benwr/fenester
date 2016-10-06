@@ -22,6 +22,7 @@ class Layout(object):
         """
 
         self.focused_index = -1
+        self.linemax = None
 
         # I think this function ends up being unnecessarily expensive (n^2 * log n?)
         # but it was the first thing I thought of, and n^2 * log n is still smallish for
@@ -158,7 +159,9 @@ class Layout(object):
         if self.direction == NONE:
             text_length = len(self.window.buffer)
             lineno_width = min(int(math.log(text_length, 10) + 2.0001), 4)
-            return max(max([len(l) for l in self.window.buffer]) + lineno_width
+            self.linemax = self.linemax or max([len(l)
+                for l in self.window.buffer])
+            return max(self.linemax + lineno_width
                     + 2, self.min_width() + lineno_width + 2)
         # for line numbers
         elif self.direction == VERTICAL:
