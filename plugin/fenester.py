@@ -236,7 +236,7 @@ class Layout(object):
                 widths = [r * total_growth + m
                         for (r, m) in zip(growth_proportions, min_widths)]
                 for w, l in zip(widths, self.layouts):
-                    l.force_into_dimensions(int(math.ceil(w)), height)
+                    l.force_into_dimensions(int(w), height)
         elif self.direction == VERTICAL:
             min_heights = [l.min_height() for l in self.layouts]
             preferred_heights = [l.preferred_height() for l in self.layouts]
@@ -270,7 +270,7 @@ class Layout(object):
                 heights = [r * total_growth + m for (r, m)
                         in zip(growth_proportions, min_heights)]
                 for h, l in zip(heights, self.layouts):
-                    l.force_into_dimensions(width, int(math.ceil(h)))
+                    l.force_into_dimensions(width, int(h))
         else:
             self.window.width = width
             self.window.height = height
