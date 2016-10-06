@@ -38,8 +38,8 @@ class Layout(object):
             if w.col + w.width > self.right:
                 self.right = w.col + w.width - 1
 
-        self.width = self.right - self.left + 1
-        self.height = self.bottom - self.top + 1
+        self.width = max(self.right - self.left + 1, 0)
+        self.height = max(self.bottom - self.top + 1, 0)
 
         if len(windows) == 1:
             self.window = windows[0]
@@ -154,7 +154,7 @@ class Layout(object):
         
     def preferred_width(self):
         if self.direction == NONE:
-            return max([len(l) for l in self.window.buffer]) + 6
+            return max(max([len(l) for l in self.window.buffer]) + 6, self.min_width() + 2)
         # for line numbers
         elif self.direction == VERTICAL:
             return max([l.preferred_width() for l in self.layouts])
@@ -163,7 +163,7 @@ class Layout(object):
 
     def preferred_height(self):
         if self.direction == NONE:
-            return len(self.window.buffer)
+            return max(len(self.window.buffer) + 2, self.min_height() + 2)
         elif self.direction == VERTICAL:
             return sum([l.preferred_height() for l in self.layouts])
         else: # self.direction == HORIZONTAL:
@@ -191,12 +191,12 @@ class Layout(object):
         if self.focused_index == -1:
             return self.min_height()
         if self.direction == VERTICAL:
-            return max([self.layouts[self.focused_index].focused_height()]
+            return sum([self.layouts[self.focused_index].focused_height()]
                     + [l.min_height() for l in
                         self.layouts[:self.focused_index] +
                         self.layouts[self.focused_index + 1:]])
         else: # self.direction == HORIZONTAL
-            return sum([self.layouts[self.focused_index].focused_height()]
+            return max([self.layouts[self.focused_index].focused_height()]
                     + [l.min_height() for l in
                         self.layouts[:self.focused_index] +
                         self.layouts[self.focused_index + 1:]])
@@ -240,8 +240,11 @@ class Layout(object):
             growth_rates = [p - m for (p, m)
                     in zip(preferred_heights, min_heights)]
             total_growth = height - sum(min_heights) 
-            growth_proportions = [float(r) / sum(growth_rates)
-                    for r in growth_rates]
+            if sum(growth_rates) > 0:
+                growth_proportions = [float(r) / sum(growth_rates)
+                        for r in growth_rates]
+            else:
+                growth_proportions = [1 for _ in growth_rates]
 
             heights = [r * total_growth + m for (r, m)
                     in zip(growth_proportions, min_heights)]
