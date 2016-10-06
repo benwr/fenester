@@ -1,5 +1,7 @@
-import vim
+import math
 import sys
+
+import vim
 
 NONE = 0
 VERTICAL = 1
@@ -154,7 +156,10 @@ class Layout(object):
         
     def preferred_width(self):
         if self.direction == NONE:
-            return max(max([len(l) for l in self.window.buffer]) + 6, self.min_width() + 2)
+            text_length = len(self.window.buffer)
+            lineno_width = min(int(math.log(text_length, 10) + 1.0001), 4)
+            return max(max([len(l) for l in self.window.buffer]) + lineno_width
+                    + 1, self.min_width() + lineno_width + 1)
         # for line numbers
         elif self.direction == VERTICAL:
             return max([l.preferred_width() for l in self.layouts])
