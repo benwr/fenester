@@ -73,8 +73,35 @@ If you want to make one, or if you want me to make one,
 I'd probably be happy to. I just have to find some spare
 time around somewhere.
 
+* Fenester doesn't care about buffer types or any kind of
+advanced vim stuff - all windows are equal. This is probably
+super-annoying if you use a bunch of fancy plugins.
+
+* Probably lots more
+
 If you want to address any of these issues (without
 modifying the default behavior too much - remember,
 this is a project entirely written for me), I'll gladly
 accept any and all PRs.
 
+
+## Recommended installation
+
+Fenester defines only one command, `FenArrange`. This
+command looks at the current and all windows, and
+sets the window dimensions in-place. It can by
+installed with `vim-plug` as follows:
+
+In your .vimrc:
+
+```
+call plug#begin()
+...
+Plug 'benwr/fenester'
+...
+call plug#end()
+
+au WinEnter * FenArrange
+au VimResized * FenArrange
+au CursorMovedI * FenArrange
+```
