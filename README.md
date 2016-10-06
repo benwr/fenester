@@ -94,7 +94,7 @@ installed with `vim-plug` as follows:
 
 In your .vimrc:
 
-```vimscript
+```vim
 call plug#begin()
 ...
 Plug 'benwr/fenester'
