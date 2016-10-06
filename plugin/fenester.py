@@ -217,6 +217,8 @@ class Layout(object):
                 for i, (w, l) in enumerate(zip(preferred_widths, self.layouts)):
                     if i != self.focused_index:
                         l.force_into_dimensions(w, height)
+                    else:
+                        l.force_into_dimensions(width - sum(preferred_widths), height)
             else:
                 growth_rates = [p - m for (p, m) in
                         zip(preferred_widths, min_widths)]
@@ -245,6 +247,8 @@ class Layout(object):
                 for i, (h, l) in enumerate(zip(preferred_heights, self.layouts)):
                     if i != self.focused_index:
                         l.force_into_dimensions(width, h)
+                    else:
+                        l.force_into_dimensions(width, height - sum(preferred_heights))
             else:
                 growth_rates = [p - m for (p, m)
                         in zip(preferred_heights, min_heights)]
@@ -257,8 +261,8 @@ class Layout(object):
 
                 heights = [r * total_growth + m for (r, m)
                         in zip(growth_proportions, min_heights)]
-                for w, l in zip(heights, self.layouts):
-                    l.force_into_dimensions(width, int(w))
+                for h, l in zip(heights, self.layouts):
+                    l.force_into_dimensions(width, int(h))
         else:
             self.window.width = width
             self.window.height = height
