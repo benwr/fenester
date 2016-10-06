@@ -157,7 +157,7 @@ class Layout(object):
     def preferred_width(self):
         if self.direction == NONE:
             text_length = len(self.window.buffer)
-            lineno_width = min(int(math.log(text_length, 10) + 1.0001), 4)
+            lineno_width = min(int(math.log(text_length, 10) + 2.0001), 4)
             return max(max([len(l) for l in self.window.buffer]) + lineno_width
                     + 2, self.min_width() + lineno_width + 2)
         # for line numbers
