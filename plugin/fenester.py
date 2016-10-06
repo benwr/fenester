@@ -218,7 +218,9 @@ class Layout(object):
                     if i != self.focused_index:
                         l.force_into_dimensions(w, height)
                     else:
-                        l.force_into_dimensions(width - sum(preferred_widths), height)
+                        l.force_into_dimensions(width -
+                                sum(preferred_widths) +
+                                preferred_widths[self.focused_index], height)
             else:
                 growth_rates = [p - m for (p, m) in
                         zip(preferred_widths, min_widths)]
@@ -248,7 +250,8 @@ class Layout(object):
                     if i != self.focused_index:
                         l.force_into_dimensions(width, h)
                     else:
-                        l.force_into_dimensions(width, height - sum(preferred_heights))
+                        l.force_into_dimensions(width, height - sum(preferred_heights) +
+                                preferred_heights[self.focused_index])
             else:
                 growth_rates = [p - m for (p, m)
                         in zip(preferred_heights, min_heights)]
