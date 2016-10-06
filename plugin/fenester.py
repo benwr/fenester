@@ -147,7 +147,7 @@ class Layout(object):
     def min_width(self):
         if self.minwidth:
             return self.minwidth
-        if self.direction == NONE:
+        elif self.direction == NONE:
             self.minwidth = DEFAULT_MIN_WIDTH
         elif self.direction == VERTICAL:
             self.minwidth = max([l.min_width() for l in self.layouts])
@@ -166,7 +166,7 @@ class Layout(object):
     def preferred_width(self):
         if self.prefwidth:
             return self.prefwidth
-        if self.direction == NONE:
+        elif self.direction == NONE:
             text_length = len(self.window.buffer)
             lineno_width = min(int(math.log(text_length, 10) + 2.0001), 4)
             self.linemax = self.linemax or max([len(l)
@@ -192,11 +192,11 @@ class Layout(object):
     def focused_width(self):
         if self.focwidth:
             return self.focwidth
-        if self.direction == NONE:
+        elif self.direction == NONE:
             self.focwidth = self.preferred_width()
-        if self.focused_index == -1:
+        elif self.focused_index == -2:
             self.focwidth = self.min_width()
-        if self.direction == VERTICAL:
+        elif self.direction == VERTICAL:
             self.focwidth = max([self.layouts[self.focused_index].focused_width()]
                     + [l.min_width() for l in
                         self.layouts[:self.focused_index] +
