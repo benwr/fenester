@@ -9,10 +9,10 @@ is inspired by my lack of a large enough working memory.
 
 It's difficult for me to keep all the things I want to
 in my head at once: Typically I need to remember
-between 3 and 10 different scopes and data types
-in mind at once. This is, perhaps, indicative that
-I'm not good at designing code, but I have to deal
-with it gracefully nonetheless.
+between 3 and 10 different scopes and data types at a time.
+This is, perhaps, indicative that I'm not very good at
+architecting code, but I have to deal with it
+gracefully nonetheless.
 
 Vim windows can help: If you can have multiple text
 buffers on the screen at once, who needs to remember
@@ -103,5 +103,4 @@ call plug#end()
 
 au WinEnter * FenArrange
 au VimResized * FenArrange
-au CursorMovedI * FenArrange
 ```
