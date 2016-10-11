@@ -205,7 +205,7 @@ class Layout(object):
         if self.focwidth:
             return self.focwidth
         elif self.direction == NONE:
-            self.focwidth = self.preferred_width()
+            self.focwidth = self.preferred_width() + 1
         elif self.focused_index == -2:
             self.focwidth = self.min_width()
         elif self.direction == VERTICAL:
